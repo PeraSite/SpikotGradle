@@ -1,12 +1,12 @@
-package kr.heartpattern.spikotgradle
+package com.perasite.spikotgradle
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.jvm.tasks.Jar
 import org.gradle.kotlin.dsl.add
 import org.gradle.kotlin.dsl.exclude
+import org.gradle.kotlin.dsl.maven
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.net.URI
 
 val excludeSet = listOf(
     "org.jetbrains.kotlin" to "kotlin-stdlib",
@@ -28,24 +28,26 @@ val excludeSet = listOf(
 @Suppress("UnstableApiUsage")
 class SpikotGradlePlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        project.buildscript.repositories.maven { config ->
-            config.url = URI("https://maven.heartpattern.io/repository/maven-public/")
+        project.buildscript.repositories.apply {
+            mavenCentral()
+            maven("https://repo.heartpattern.io/repository/maven-public/")
         }
-        project.repositories.maven { config ->
-            config.url = URI("https://maven.heartpattern.io/repository/maven-public/")
+        project.repositories.apply {
+            maven("https://repo.heartpattern.io/repository/maven-public/")
+            maven("https://jitpack.io")
         }
-
+        
         project.plugins.apply("org.jetbrains.kotlin.jvm")
         project.plugins.apply("org.jetbrains.kotlin.kapt")
         project.plugins.apply("org.jetbrains.kotlin.plugin.serialization")
-
+        
         with(project.dependencies) {
-            add("compileOnly", "org.spigotmc:plugin-annotations:1.2.2-SNAPSHOT"){
-                exclude("org.bukkit","bukkit")
+            add("compileOnly", "org.spigotmc:plugin-annotations:1.2.2-SNAPSHOT") {
+                exclude("org.bukkit", "bukkit")
             }
             add("kapt", "org.spigotmc:plugin-annotations:1.2.2-SNAPSHOT")
         }
-
+        
         project.tasks.withType(KotlinCompile::class.java) { config ->
             config.kotlinOptions {
                 jvmTarget = "1.8"
@@ -55,16 +57,16 @@ class SpikotGradlePlugin : Plugin<Project> {
                 )
             }
         }
-
+        
         project.afterEvaluate { prj ->
-            prj.dependencies.add("kapt", "kr.heartpattern:SpikotClassLocator:4.0.0-SNAPSHOT")
-            val compile = project.configurations.getByName("compile")
+            prj.dependencies.add("kapt", "com.github.PeraSite:SpikotClassLocator:-SNAPSHOT")
+            val impl = project.configurations.getByName("implementation")
             val shade = project.configurations.create("shade")
-            shade.extendsFrom(compile)
-
+            shade.extendsFrom(impl)
+            
             for ((group, module) in excludeSet)
                 shade.exclude(group, module)
-
+            
             prj.tasks.create("createPlugin", Jar::class.java) { task ->
                 task.archiveFileName.set("${prj.name}-Plugin.jar")
                 task.from(shade.map {

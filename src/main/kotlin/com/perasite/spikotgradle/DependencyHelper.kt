@@ -1,4 +1,4 @@
-package kr.heartpattern.spikotgradle
+package com.perasite.spikotgradle
 
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import java.util.regex.Pattern
@@ -17,13 +17,23 @@ fun DependencyHandler.spigotApi(version: String) {
     add("compileOnly", "org.spigotmc:spigot-api:$fullVersion")
 }
 
+fun DependencyHandler.spigot(version: String) {
+    val fullVersion = completeVersion(version)
+    add("compileOnly", "org.spigotmc:spigot:$fullVersion")
+}
+
 fun DependencyHandler.paperApi(version: String) {
     val fullVersion = completeVersion(version)
     add("compileOnly", "com.destroystokyo.paper:paper-api:$fullVersion")
 }
 
-fun DependencyHandler.spikot(version: String){
-    add("compileOnly", "kr.heartpattern:Spikot:$version")
+fun DependencyHandler.paper(version: String) {
+    val fullVersion = completeVersion(version)
+    add("compileOnly", "com.destroystokyo.paper:paper:$fullVersion")
+}
+
+fun DependencyHandler.spikot(version: String = "-SNAPSHOT") {
+    add("compileOnly", "com.github.PeraSite:Spikot:$version")
 }
 
 private fun completeVersion(version: String): String {
@@ -31,8 +41,8 @@ private fun completeVersion(version: String): String {
         version.substring(0..(version.length - 10))
     else
         version
-
-    return when{
+    
+    return when {
         onlyVersion.matcher(regularized).matches() -> "$regularized-R0.1"
         releaseVersion.matcher(regularized).matches() -> regularized
         preVersion.matcher(regularized).matches() -> regularized
